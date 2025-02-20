@@ -5,38 +5,45 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.UpdateOptions;
 import com.wildwoodsmp.currency.api.*;
+import com.wildwoodsmp.currency.api.Currency;
 import com.wildwoodsmp.currency.impl.mongo.MongoDriver;
+import com.wildwoodsmp.currency.util.SortedList;
 import org.bson.Document;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public class WWCurrency implements Currency {
+    private final static int MAX_DEPTH = 5;
     private final String name;
     private final String plural;
     private final String symbol;
     private final boolean allowsNegatives;
     private final boolean allowsPay;
+    private final int decimalPlaces;
+    private final String format;
+    private final double defaultBalance;
     private final MongoDriver mongoDriver;
     private final MongoCollection<Document> userCollection;
     private final MongoCollection<Document> transactionCollection;
     private final MongoCollection<Document> deletedTransactionCollection;
 
-    public WWCurrency(String name, String plural, String symbol, boolean allowsNegatives, boolean allowsPay, String mongoUri, String mongoDatabaseName) {
+    public WWCurrency(String name, String plural, String symbol, boolean allowsNegatives, boolean allowsPay, int decimalPlaces, String format, double defaultBalance, String mongoUri, String mongoDatabaseName) {
         this.name = name;
         this.plural = plural;
         this.symbol = symbol;
         this.allowsNegatives = allowsNegatives;
         this.allowsPay = allowsPay;
+        this.decimalPlaces = decimalPlaces;
+        this.format = format;
+        this.defaultBalance = defaultBalance;
 
         this.mongoDriver = new MongoDriver(mongoUri, mongoDatabaseName);
         this.mongoDriver.connect();
 
         this.userCollection = mongoDriver.getUserCollection();
+
         this.transactionCollection = mongoDriver.getTransactionCollection();
         this.transactionCollection.createIndex(new Document("linkerId", 1));
         this.transactionCollection.createIndex(new Document("user", 1));
@@ -71,9 +78,29 @@ public class WWCurrency implements Currency {
     }
 
     @Override
+    public int decimalPlaces() {
+        return decimalPlaces;
+    }
+
+    @Override
+    public String format() {
+        return format;
+    }
+
+    @Override
+    public String format(double amount) {
+        return String.format(format, amount);
+    }
+
+    @Override
+    public double defaultBalance() {
+        return defaultBalance;
+    }
+
+    @Override
     public double balance(UUID uuid) {
-        if (CurrencyApi.get().getUsers().containsKey(uuid)) {
-            return CurrencyApi.get().getUsers().get(uuid).balance(this);
+        if (CurrencyApi.getService().localUsersCache().containsKey(uuid)) {
+            return CurrencyApi.getService().localUsersCache().get(uuid).balance(this);
         }
 
         Document userDocument = userCollection.find()
@@ -116,10 +143,8 @@ public class WWCurrency implements Currency {
 
             transactionCollection.insertOne(session, transaction.toDocument());
             userCollection.updateOne(session, new Document("_id", user.toString()), new Document("$inc", new Document(this.name, amount)), new UpdateOptions().upsert(true));
-            CurrencyUser currencyUser = CurrencyApi.get().getUsers().get(user);
-            if (currencyUser != null) {
-                ((WWCurrencyUser) currencyUser).getBalanceMap().put(this, currencyUser.balance(this) + amount);
-            }
+            Optional<CurrencyUser> localUser = CurrencyApi.getService().getLocalUser(user);
+            localUser.ifPresent(currencyUser -> ((WWCurrencyUser) currencyUser).getBalanceMap().put(this, currencyUser.balance(this) + amount));
             //TODO: Pubsub notify message
 
             session.commitTransaction();
@@ -157,9 +182,9 @@ public class WWCurrency implements Currency {
 
             transactionCollection.insertOne(session, transaction.toDocument());
             userCollection.updateOne(session, new Document("_id", user.toString()), new Document("$set", new Document(this.name, amount)), new UpdateOptions().upsert(true));
-            CurrencyUser currencyUser = CurrencyApi.get().getUsers().get(user);
-            if (currencyUser != null) {
-                ((WWCurrencyUser) currencyUser).getBalanceMap().put(this, amount);
+            Optional<CurrencyUser> currencyUser = CurrencyApi.getService().getLocalUser(user);
+            if (currencyUser.isPresent()) {
+                ((WWCurrencyUser) currencyUser.get()).getBalanceMap().put(this, amount);
             }
             //TODO: Pubsub notify message
 
@@ -198,10 +223,8 @@ public class WWCurrency implements Currency {
 
             transactionCollection.insertOne(session, transaction.toDocument());
             userCollection.updateOne(session, new Document("_id", user.toString()), new Document("$inc", new Document(this.name, -amount)), new UpdateOptions().upsert(true));
-            CurrencyUser currencyUser = CurrencyApi.get().getUsers().get(user);
-            if (currencyUser != null) {
-                ((WWCurrencyUser) currencyUser).getBalanceMap().put(this, currencyUser.balance(this) - amount);
-            }
+            Optional<CurrencyUser> currencyUser = CurrencyApi.getService().getLocalUser(user);
+            currencyUser.ifPresent(value -> ((WWCurrencyUser) value).getBalanceMap().put(this, value.balance(this) - amount));
 
         } catch (Exception e) {
             session.abortTransaction();
@@ -241,7 +264,7 @@ public class WWCurrency implements Currency {
         if (user == null) throw new IllegalArgumentException("User cannot be null");
         if (currency == null) throw new IllegalArgumentException("Currency cannot be null");
         if (depth < 0) throw new IllegalArgumentException("Depth cannot be less than 0");
-        if (depth > 5) return List.of();
+        if (depth > MAX_DEPTH) return List.of();
 
         List<UUID> recalculatedUsers = new ArrayList<>();
         double startingBalance = balance(user);
@@ -249,12 +272,10 @@ public class WWCurrency implements Currency {
         FindIterable<Document> documents = transactionCollection.find(new Document("user", user.toString()).append("currency", currency.name()));
         for (Document document : documents) {
             WWCurrencyTransaction transaction = new WWCurrencyTransaction(document);
-            if (transaction.type() == CurrencyTransactionType.PAYMENT) {
-                balance += transaction.amount();
-            } else if (transaction.type() == CurrencyTransactionType.WITHDRAWAL) {
-                balance -= transaction.amount();
-            } if (transaction.type() == CurrencyTransactionType.OVERRIDE) {
-                balance = transaction.amount();
+            switch (transaction.type()) {
+                case PAYMENT -> balance += transaction.amount();
+                case WITHDRAWAL -> balance -= transaction.amount();
+                case OVERRIDE -> balance = transaction.amount();
             }
 
             if (transaction.linkerId().isPresent()) {
@@ -277,8 +298,27 @@ public class WWCurrency implements Currency {
     }
 
     @Override
+    public void recount(UUID user, Currency currency) {
+        List<CurrencyTransaction> list = history(user, currency);
+        double balance = 0;
+        for (CurrencyTransaction transaction : list) {
+            switch (transaction.type()) {
+                case PAYMENT -> balance += transaction.amount();
+                case WITHDRAWAL -> balance -= transaction.amount();
+                case OVERRIDE -> balance = transaction.amount();
+            }
+        }
+
+        if (balance < 0 && !allowsNegatives) {
+            balance = 0;
+        }
+
+        set(user, balance, "Recounted balance", null, null); //TODO: verify this works
+    }
+
+    @Override
     public List<CurrencyTransaction> history(UUID user, Currency currency) {
-        List<CurrencyTransaction> transactions = new ArrayList<>();
+        List<CurrencyTransaction> transactions = new SortedList<>(Comparator.comparing(CurrencyTransaction::timestamp));
         FindIterable<Document> documents = transactionCollection.find(
                 new Document("user", user.toString())
                         .append("currency", currency.name())

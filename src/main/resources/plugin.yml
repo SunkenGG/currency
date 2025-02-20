@@ -1,4 +1,4 @@
 name: Currency
 version: '${version}'
-main: wtf.casper.currency.Currency
-api-version: '1.21'
+main: com.wildwoodsmp.currency.bukkit.CurrencyPlugin
+api-version: '1.13'

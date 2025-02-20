@@ -37,6 +37,30 @@ public interface Currency {
     boolean allowsPay();
 
     /**
+     * Get whether the currency allows withdrawals.
+     * @return integer The number of decimal places the currency uses.
+     */
+    int decimalPlaces();
+
+    /**
+     * Get the currency format.
+     * @return The currency format.
+     */
+    String format();
+
+    /**
+     * Get the currency format for a certain amount.
+     * @return The currency format for the amount.
+     */
+    String format(double amount);
+
+    /**
+     * Get the default balance of a player.
+     * @return The default balance of a player.
+     */
+    double defaultBalance();
+
+    /**
      * Get the balance of a player.
      * @param uuid The UUID of the player.
      * @return The balance of the player.
@@ -135,6 +159,13 @@ public interface Currency {
      * @return A list of transactions for the player.
      */
     List<CurrencyTransaction> history(UUID user, Currency currency);
+
+    /**
+     * Recounts the balance of a user based off the transaction history.
+     * @param user The UUID of the player.
+     * @param currency The currency to recount.
+     */
+    void recount(UUID user, Currency currency);
 
     /**
      * Get the transaction history of a linker id

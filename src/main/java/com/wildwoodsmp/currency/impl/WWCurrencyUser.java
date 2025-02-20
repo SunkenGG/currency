@@ -7,6 +7,7 @@ import org.bson.Document;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 public class WWCurrencyUser implements CurrencyUser {
@@ -24,7 +25,8 @@ public class WWCurrencyUser implements CurrencyUser {
         this.balances = new HashMap<>();
         for (String key : document.keySet()) {
             if (key.equals("_id")) continue;
-            balances.put(CurrencyApi.get().getCurrencies().get(key), document.getDouble(key));
+            Optional<Currency> currency = CurrencyApi.getService().getCurrency(key);
+            currency.ifPresent(value -> balances.put(value, document.getDouble(key)));
         }
     }
 
@@ -45,6 +47,21 @@ public class WWCurrencyUser implements CurrencyUser {
     @Override
     public double balance(Currency currency) {
         return balances.getOrDefault(currency, 0.0);
+    }
+
+    @Override
+    public void pay(Currency currency, double amount, String reason, UUID linkerId, String linkerReason) {
+        throw new UnsupportedOperationException("Not implemented"); // TODO
+    }
+
+    @Override
+    public void withdraw(Currency currency, double amount, String reason, UUID linkerId, String linkerReason) {
+        throw new UnsupportedOperationException("Not implemented"); // TODO
+    }
+
+    @Override
+    public void set(Currency currency, double amount, String reason, UUID linkerId, String linkerReason) {
+        throw new UnsupportedOperationException("Not implemented"); // TODO
     }
 
     public Map<Currency, Double> getBalanceMap() {

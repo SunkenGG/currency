@@ -1,24 +1,14 @@
 package com.wildwoodsmp.currency.api;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+
 
 public class CurrencyApi {
-    private final static CurrencyApi instance = new CurrencyApi();
-
-    private Map<String, Currency> currencies;
-    private Map<UUID, CurrencyUser> users;
-
-    public static CurrencyApi get() {
-        return instance;
-    }
-
-    public Map<String, Currency> getCurrencies() {
-        return currencies;
-    }
-
-    public Map<UUID, CurrencyUser> getUsers() {
-        return users;
-    }
-
+    @Getter @Setter private static CurrencyService service;
 }
