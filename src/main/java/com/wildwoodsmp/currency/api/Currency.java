@@ -1,5 +1,7 @@
 package com.wildwoodsmp.currency.api;
 
+import org.jetbrains.annotations.NotNull;
+
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
@@ -37,12 +39,6 @@ public interface Currency {
     boolean allowsPay();
 
     /**
-     * Get whether the currency allows withdrawals.
-     * @return integer The number of decimal places the currency uses.
-     */
-    int decimalPlaces();
-
-    /**
      * Get the currency format.
      * @return The currency format.
      */
@@ -76,7 +72,7 @@ public interface Currency {
      * @param linkerReason A reason to link multiple transactions together.
      * @return The transaction object representing the payment.
      */
-    CurrencyTransaction pay(UUID user, double amount, String reason, @Nullable UUID linkerId, @Nullable String linkerReason);
+    CurrencyTransaction deposit(UUID user, double amount, String reason, @Nullable UUID linkerId, @Nullable String linkerReason);
 
     /**
      * Pay a certain amount of currency from one player to another.
@@ -85,8 +81,8 @@ public interface Currency {
      * @param reason The reason for the payment.
      * @return The transaction object representing the payment.
      */
-    default CurrencyTransaction pay(UUID user, double amount, String reason) {
-        return pay(user, amount, reason, null, null);
+    default CurrencyTransaction deposit(UUID user, double amount, String reason) {
+        return deposit(user, amount, reason, null, null);
     }
 
     /**
@@ -134,6 +130,16 @@ public interface Currency {
     }
 
     /**
+     * If the currency has a balance for a player.
+     * @param uniqueId The UUID of the player.
+     * @param amount The amount to check for.
+     * @return True if the player has the amount, false otherwise.
+     */
+    default boolean has(@NotNull UUID uniqueId, double amount) {
+        return balance(uniqueId) >= amount;
+    }
+
+    /**
      * Invalidate a transaction.
      * @param transactionId The ID of the transaction to invalidate.
      */
@@ -174,4 +180,11 @@ public interface Currency {
      */
     List<CurrencyTransaction> getLinkedTransactions(UUID linkerId);
 
+    /**
+     * Get the top balances of the currency.
+     * @param limit The number of balances to get.
+     * @param skip The number of balances to skip.
+     * @return A list of currency users with the top balances.
+     */
+    List<CurrencyUser> getTopBalances(int limit, int skip);
 }

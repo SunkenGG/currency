@@ -9,6 +9,7 @@ import com.wildwoodsmp.currency.api.Currency;
 import com.wildwoodsmp.currency.impl.mongo.MongoDriver;
 import com.wildwoodsmp.currency.util.SortedList;
 import org.bson.Document;
+import org.bukkit.Bukkit;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
@@ -21,7 +22,6 @@ public class WWCurrency implements Currency {
     private final String symbol;
     private final boolean allowsNegatives;
     private final boolean allowsPay;
-    private final int decimalPlaces;
     private final String format;
     private final double defaultBalance;
     private final MongoDriver mongoDriver;
@@ -29,13 +29,12 @@ public class WWCurrency implements Currency {
     private final MongoCollection<Document> transactionCollection;
     private final MongoCollection<Document> deletedTransactionCollection;
 
-    public WWCurrency(String name, String plural, String symbol, boolean allowsNegatives, boolean allowsPay, int decimalPlaces, String format, double defaultBalance, String mongoUri, String mongoDatabaseName) {
+    public WWCurrency(String name, String plural, String symbol, boolean allowsNegatives, boolean allowsPay, String format, double defaultBalance, String mongoUri, String mongoDatabaseName) {
         this.name = name;
         this.plural = plural;
         this.symbol = symbol;
         this.allowsNegatives = allowsNegatives;
         this.allowsPay = allowsPay;
-        this.decimalPlaces = decimalPlaces;
         this.format = format;
         this.defaultBalance = defaultBalance;
 
@@ -78,11 +77,6 @@ public class WWCurrency implements Currency {
     }
 
     @Override
-    public int decimalPlaces() {
-        return decimalPlaces;
-    }
-
-    @Override
     public String format() {
         return format;
     }
@@ -109,7 +103,10 @@ public class WWCurrency implements Currency {
 
         WWCurrencyUser user;
         if (userDocument == null) {
-            user = new WWCurrencyUser(uuid);
+            user = new WWCurrencyUser(uuid, Bukkit.getOfflinePlayer(uuid).getName());
+            for (Currency value : CurrencyApi.getService().currencies().values()) {
+                user.set(value, value.defaultBalance(), "Default balance", null, null);
+            }
             userCollection.insertOne(user.toDocument());
 
             return 0;
@@ -120,7 +117,7 @@ public class WWCurrency implements Currency {
     }
 
     @Override
-    public CurrencyTransaction pay(UUID user, double amount, String reason, @Nullable UUID linkerId, @Nullable String linkerReason) {
+    public CurrencyTransaction deposit(UUID user, double amount, String reason, @Nullable UUID linkerId, @Nullable String linkerReason) {
         if (user == null) throw new IllegalArgumentException("User cannot be null");
         if (amount <= 0) throw new IllegalArgumentException("Amount must be greater than 0");
         if (reason == null) throw new IllegalArgumentException("Reason cannot be null");
@@ -148,7 +145,7 @@ public class WWCurrency implements Currency {
             //TODO: Pubsub notify message
 
             session.commitTransaction();
-        } catch (Exception e) {
+        } catch (Exception e) { 
             session.abortTransaction();
             throw e;
         } finally {
@@ -341,5 +338,19 @@ public class WWCurrency implements Currency {
         }
 
         return transactions;
+    }
+
+    @Override
+    public List<CurrencyUser> getTopBalances(int limit, int skip) {
+        List<CurrencyUser> users = new ArrayList<>();
+        FindIterable<Document> documents = userCollection.find()
+                .sort(new Document(name, -1))
+                .skip(skip)
+                .limit(limit);
+        for (Document document : documents) {
+            users.add(new WWCurrencyUser(document));
+        }
+
+        return users;
     }
 }

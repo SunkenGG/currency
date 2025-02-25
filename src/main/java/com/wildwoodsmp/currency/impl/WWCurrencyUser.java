@@ -13,18 +13,22 @@ import java.util.UUID;
 public class WWCurrencyUser implements CurrencyUser {
 
     private final UUID playerId;
+    private final String name;
     private final Map<Currency, Double> balances;
 
-    public WWCurrencyUser(UUID playerId) {
+    public WWCurrencyUser(UUID playerId, String name) {
         this.playerId = playerId;
+        this.name = name;
         this.balances = new HashMap<>();
     }
 
     public WWCurrencyUser(Document document) {
         this.playerId = UUID.fromString(document.getString("_id"));
+        this.name = document.getString("name");
         this.balances = new HashMap<>();
         for (String key : document.keySet()) {
             if (key.equals("_id")) continue;
+            if (key.equals("name")) continue;
             Optional<Currency> currency = CurrencyApi.getService().getCurrency(key);
             currency.ifPresent(value -> balances.put(value, document.getDouble(key)));
         }
@@ -33,6 +37,7 @@ public class WWCurrencyUser implements CurrencyUser {
     public Document toDocument() {
         Document document = new Document();
         document.put("_id", playerId.toString());
+        document.put("name", name);
         for (Map.Entry<Currency, Double> entry : balances.entrySet()) {
             document.put(entry.getKey().name(), entry.getValue());
         }
@@ -51,17 +56,17 @@ public class WWCurrencyUser implements CurrencyUser {
 
     @Override
     public void pay(Currency currency, double amount, String reason, UUID linkerId, String linkerReason) {
-        throw new UnsupportedOperationException("Not implemented"); // TODO
+        currency.deposit(this.playerId, amount, reason, linkerId, linkerReason);
     }
 
     @Override
     public void withdraw(Currency currency, double amount, String reason, UUID linkerId, String linkerReason) {
-        throw new UnsupportedOperationException("Not implemented"); // TODO
+        currency.withdraw(this.playerId, amount, reason, linkerId, linkerReason);
     }
 
     @Override
     public void set(Currency currency, double amount, String reason, UUID linkerId, String linkerReason) {
-        throw new UnsupportedOperationException("Not implemented"); // TODO
+        currency.set(this.playerId, amount, reason, linkerId, linkerReason);
     }
 
     public Map<Currency, Double> getBalanceMap() {

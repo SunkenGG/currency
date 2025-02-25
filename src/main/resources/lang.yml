@@ -1,0 +1,19 @@
+coins:
+  help:
+    message:
+      - "<gold><bold>COINS HELP MENU"
+      - "<gray>/coins - View your balance"
+      - "<gray>/coins pay <player> <amount> - Pay a player"
+      - "<gray>/coins bal/balance [player] - View a player's balance"
+      - "<gray>/coins baltop - View the top balances"
+      - "<gray>/coins eco give <player> <amount> <reason> - Give a player coins"
+      - "<gray>/coins eco take <player> <amount> <reason> - Take coins from a player"
+      - "<gray>/coins eco set <player> <amount> <reason> - Set a player's balance"
+  player-not-found:
+    message: "<red>Could not find user <white>%player%"
+  balance:
+    message: "<gold>Your coins: <white>%balance%"
+  balance-other:
+    message: "<gold>%player%'s coins: <white>%balance%"
+  invalid-amount:
+    message: "<white>%amount% <red>is not a valid amount"
