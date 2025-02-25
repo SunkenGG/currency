@@ -17,3 +17,29 @@ coins:
     message: "<gold>%player%'s coins: <white>%balance%"
   invalid-amount:
     message: "<white>%amount% <red>is not a valid amount"
+  negative-balance-not-allowed:
+    message: "<red>Negative balance is not allowed"
+  payment-failed:
+    message: "<red>Payment failed. Error: %error%"
+  payment-success:
+    message: "<green>Paid <white>%amount%<green> to <white>%player%"
+  payment-success-receive:
+    message: "<green>Received <white>%amount%<green> from <white>%player%"
+  eco-set-usage:
+    message: "<red>Usage: /coins eco set <player> <amount> <reason>"
+  eco-set-error:
+    message: "<red>Could not set balance for <white>%player%<red>. Error: %error%"
+  eco-set-success:
+    message: "<green>Set balance for <white>%player%<green> to <white>%amount%"
+  eco-give-usage:
+    message: "<red>Usage: /coins eco give <player> <amount> <reason>"
+  eco-give-error:
+    message: "<red>Could not give coins to <white>%player%<red>. Error: %error%"
+  eco-give-success:
+    message: "<green>Gave <white>%amount%<green> coins to <white>%player%"
+  eco-take-usage:
+    message: "<red>Usage: /coins eco take <player> <amount> <reason>"
+  eco-take-error:
+    message: "<red>Could not take coins from <white>%player%<red>. Error: %error%"
+  eco-take-success:
+    message: "<green>Took <white>%amount%<green> coins from <white>%player%"

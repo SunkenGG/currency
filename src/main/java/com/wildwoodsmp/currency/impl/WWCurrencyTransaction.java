@@ -34,7 +34,7 @@ public class WWCurrencyTransaction implements CurrencyTransaction {
     }
 
     public WWCurrencyTransaction(Document document) {
-        this.currency = CurrencyApi.get().getCurrencies().get(document.getString("currency"));
+        this.currency = CurrencyApi.getService().currencies().get(document.getString("currency"));
         this.id = UUID.fromString(document.getString("_id"));
         this.amount = document.getDouble("amount");
         this.type = CurrencyTransactionType.valueOf(document.getString("type"));

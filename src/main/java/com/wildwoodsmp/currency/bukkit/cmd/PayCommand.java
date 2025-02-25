@@ -2,6 +2,8 @@ package com.wildwoodsmp.currency.bukkit.cmd;
 
 import com.wildwoodsmp.currency.api.Currency;
 import com.wildwoodsmp.currency.util.Placeholders;
+import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -9,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
+@Log
 public class PayCommand extends CurrencyCommand {
 
     public PayCommand(@NotNull Currency currency) {
@@ -59,10 +62,29 @@ public class PayCommand extends CurrencyCommand {
             }
 
             UUID linkerId = UUID.randomUUID();
-            this.currency.withdraw(player.getUniqueId(), amount, "Payment to " + target.getName(), linkerId, "Linked to payment to " + target.getName());
-            this.currency.deposit(target.getUniqueId(), amount, "Payment from " + player.getName(), linkerId, "Linked to payment from " + player.getName());
+            this.currency.transaction(() -> {
+                this.currency.withdraw(player.getUniqueId(), amount, "Payment to " + target.getName(), linkerId, "Linked to payment to " + target.getName());
+                this.currency.deposit(target.getUniqueId(), amount, "Payment from " + player.getName(), linkerId, "Linked to payment from " + player.getName());
+            }).thenAccept(success -> {
+                if (!success.booleanValue()) {
+                    sendLang(commandSender, "payment-failed", new Placeholders().add("error", "Transaction failed"));
+                    log.warning("Failed to process payment: Transaction failed for " + player.getName() + " to " + target.getName() + " of " + amount + " " + this.currency.name());
+                    return;
+                }
 
-            sendLang(commandSender, "payment-success", new Placeholders().add("amount", amount).add("player", target.getName()));
+                this.currency.forCacheUser(target.getUniqueId(), user -> {
+                    user.deposit(this.currency, amount, "Payment from " + player.getName(), linkerId, "Linked to payment from " + player.getName());
+                });
+                this.currency.forCacheUser(player.getUniqueId(), user -> {
+                    user.withdraw(this.currency, amount, "Payment to " + target.getName(), linkerId, "Linked to payment to " + target.getName());
+                });
+
+                sendLang(commandSender, "payment-success", new Placeholders().add("amount", amount).add("player", target.getName()));
+            }).exceptionally(throwable -> {
+                sendLang(commandSender, "payment-failed", new Placeholders().add("error", throwable.getMessage()));
+                log.warning("Failed to process payment: " + throwable.getMessage() + "\n" + throwable.getStackTrace());
+                return null;
+            });
         });
     }
 }

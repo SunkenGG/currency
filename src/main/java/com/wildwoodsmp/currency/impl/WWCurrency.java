@@ -14,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class WWCurrency implements Currency {
     private final static int MAX_DEPTH = 5;
@@ -82,19 +83,15 @@ public class WWCurrency implements Currency {
     }
 
     @Override
-    public String format(double amount) {
-        return String.format(format, amount);
-    }
-
-    @Override
     public double defaultBalance() {
         return defaultBalance;
     }
 
     @Override
     public double balance(UUID uuid) {
-        if (CurrencyApi.getService().localUsersCache().containsKey(uuid)) {
-            return CurrencyApi.getService().localUsersCache().get(uuid).balance(this);
+        Map<UUID, CurrencyUser> cache = CurrencyApi.getService().localUsersCache();
+        if (cache.containsKey(uuid)) {
+            return cache.get(uuid).balance(this);
         }
 
         Document userDocument = userCollection.find()
@@ -122,35 +119,19 @@ public class WWCurrency implements Currency {
         if (amount <= 0) throw new IllegalArgumentException("Amount must be greater than 0");
         if (reason == null) throw new IllegalArgumentException("Reason cannot be null");
 
-        ClientSession session = mongoDriver.getMongoClient().startSession();
-        session.startTransaction();
-        WWCurrencyTransaction transaction;
-        try {
-            transaction = new WWCurrencyTransaction(
-                    this,
-                    UUID.randomUUID(),
-                    amount,
-                    CurrencyTransactionType.PAYMENT,
-                    user,
-                    reason,
-                    Instant.now(),
-                    Optional.ofNullable(linkerId),
-                    Optional.ofNullable(linkerReason)
-            );
-
-            transactionCollection.insertOne(session, transaction.toDocument());
-            userCollection.updateOne(session, new Document("_id", user.toString()), new Document("$inc", new Document(this.name, amount)), new UpdateOptions().upsert(true));
-            Optional<CurrencyUser> localUser = CurrencyApi.getService().getLocalUser(user);
-            localUser.ifPresent(currencyUser -> ((WWCurrencyUser) currencyUser).getBalanceMap().put(this, currencyUser.balance(this) + amount));
-            //TODO: Pubsub notify message
-
-            session.commitTransaction();
-        } catch (Exception e) { 
-            session.abortTransaction();
-            throw e;
-        } finally {
-            session.close();
-        }
+        WWCurrencyTransaction transaction = new WWCurrencyTransaction(
+                this,
+                UUID.randomUUID(),
+                amount,
+                CurrencyTransactionType.PAYMENT,
+                user,
+                reason,
+                Instant.now(),
+                Optional.ofNullable(linkerId),
+                Optional.ofNullable(linkerReason)
+        );
+        transactionCollection.insertOne(transaction.toDocument());
+        userCollection.updateOne(new Document("_id", user.toString()), new Document("$inc", new Document(this.name, amount)), new UpdateOptions().upsert(true));
 
         return transaction;
     }
@@ -161,37 +142,20 @@ public class WWCurrency implements Currency {
         if (amount < 0) throw new IllegalArgumentException("Amount must be greater than or equal to 0");
         if (reason == null) throw new IllegalArgumentException("Reason cannot be null");
 
-        ClientSession session = mongoDriver.getMongoClient().startSession();
-        session.startTransaction();
-        WWCurrencyTransaction transaction;
-        try {
-            transaction = new WWCurrencyTransaction(
-                    this,
-                    UUID.randomUUID(),
-                    amount,
-                    CurrencyTransactionType.OVERRIDE,
-                    user,
-                    reason,
-                    Instant.now(),
-                    Optional.ofNullable(linkerId),
-                    Optional.ofNullable(linkerReason)
-            );
+        WWCurrencyTransaction transaction = new WWCurrencyTransaction(
+                this,
+                UUID.randomUUID(),
+                amount,
+                CurrencyTransactionType.OVERRIDE,
+                user,
+                reason,
+                Instant.now(),
+                Optional.ofNullable(linkerId),
+                Optional.ofNullable(linkerReason)
+        );
 
-            transactionCollection.insertOne(session, transaction.toDocument());
-            userCollection.updateOne(session, new Document("_id", user.toString()), new Document("$set", new Document(this.name, amount)), new UpdateOptions().upsert(true));
-            Optional<CurrencyUser> currencyUser = CurrencyApi.getService().getLocalUser(user);
-            if (currencyUser.isPresent()) {
-                ((WWCurrencyUser) currencyUser.get()).getBalanceMap().put(this, amount);
-            }
-            //TODO: Pubsub notify message
-
-            session.commitTransaction();
-        } catch (Exception e) {
-            session.abortTransaction();
-            throw e;
-        } finally {
-            session.close();
-        }
+        transactionCollection.insertOne(transaction.toDocument());
+        userCollection.updateOne(new Document("_id", user.toString()), new Document("$set", new Document(this.name, amount)), new UpdateOptions().upsert(true));
 
         return transaction;
     }
@@ -201,34 +165,24 @@ public class WWCurrency implements Currency {
         if (user == null) throw new IllegalArgumentException("User cannot be null");
         if (amount <= 0) throw new IllegalArgumentException("Amount must be greater than 0");
         if (reason == null) throw new IllegalArgumentException("Reason cannot be null");
-
-        ClientSession session = mongoDriver.getMongoClient().startSession();
-        session.startTransaction();
-        WWCurrencyTransaction transaction;
-        try {
-            transaction = new WWCurrencyTransaction(
-                    this,
-                    UUID.randomUUID(),
-                    amount,
-                    CurrencyTransactionType.WITHDRAWAL,
-                    user,
-                    reason,
-                    Instant.now(),
-                    Optional.ofNullable(linkerId),
-                    Optional.ofNullable(linkerReason)
-            );
-
-            transactionCollection.insertOne(session, transaction.toDocument());
-            userCollection.updateOne(session, new Document("_id", user.toString()), new Document("$inc", new Document(this.name, -amount)), new UpdateOptions().upsert(true));
-            Optional<CurrencyUser> currencyUser = CurrencyApi.getService().getLocalUser(user);
-            currencyUser.ifPresent(value -> ((WWCurrencyUser) value).getBalanceMap().put(this, value.balance(this) - amount));
-
-        } catch (Exception e) {
-            session.abortTransaction();
-            throw e;
-        } finally {
-            session.close();
+        if (balance(user) - amount < 0 && !allowsNegatives) {
+            throw new IllegalArgumentException("Cannot withdraw more than the balance");
         }
+
+        WWCurrencyTransaction transaction = new WWCurrencyTransaction(
+                this,
+                UUID.randomUUID(),
+                amount,
+                CurrencyTransactionType.WITHDRAWAL,
+                user,
+                reason,
+                Instant.now(),
+                Optional.ofNullable(linkerId),
+                Optional.ofNullable(linkerReason)
+        );
+
+        transactionCollection.insertOne(transaction.toDocument());
+        userCollection.updateOne(new Document("_id", user.toString()), new Document("$inc", new Document(this.name, -amount)), new UpdateOptions().upsert(true));
 
         return transaction;
     }
@@ -237,23 +191,11 @@ public class WWCurrency implements Currency {
     public void invalidateTransaction(UUID transactionId) {
         if (transactionId == null) throw new IllegalArgumentException("Transaction ID cannot be null");
 
-        ClientSession session = mongoDriver.getMongoClient().startSession();
-        session.startTransaction();
+        Document transaction = transactionCollection.find(new Document("_id", transactionId.toString())).first();
+        if (transaction == null) throw new IllegalArgumentException("Transaction not found");
 
-        try {
-            Document transaction = transactionCollection.find(session, new Document("_id", transactionId.toString())).first();
-            if (transaction == null) throw new IllegalArgumentException("Transaction not found");
-
-            deletedTransactionCollection.insertOne(session, transaction);
-            transactionCollection.deleteOne(session, new Document("_id", transactionId.toString()));
-
-            session.commitTransaction();
-        } catch (Exception e) {
-            session.abortTransaction();
-            throw e;
-        } finally {
-            session.close();
-        }
+        deletedTransactionCollection.insertOne(transaction);
+        transactionCollection.deleteOne(new Document("_id", transactionId.toString()));
     }
 
     @Override
@@ -353,4 +295,24 @@ public class WWCurrency implements Currency {
 
         return users;
     }
+
+    @Override
+    public CompletableFuture<Boolean> transaction(Runnable transactionRunnable) {
+        return CompletableFuture.supplyAsync(() -> {
+            ClientSession session = mongoDriver.getMongoClient().startSession();
+            session.startTransaction();
+            try {
+                transactionRunnable.run();
+                session.commitTransaction();
+                return true;
+            } catch (Exception e) {
+                session.abortTransaction();
+                return false;
+            } finally {
+                session.close();
+            }
+        });
+    }
+
+
 }

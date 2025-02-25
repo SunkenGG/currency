@@ -4,7 +4,10 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 public interface Currency {
 
@@ -48,7 +51,9 @@ public interface Currency {
      * Get the currency format for a certain amount.
      * @return The currency format for the amount.
      */
-    String format(double amount);
+    default String format(double amount) {
+        return String.format(format(), amount);
+    }
 
     /**
      * Get the default balance of a player.
@@ -187,4 +192,46 @@ public interface Currency {
      * @return A list of currency users with the top balances.
      */
     List<CurrencyUser> getTopBalances(int limit, int skip);
+
+    /**
+     * Run a transaction
+     * @param transactionRunnable The transaction to run.
+     * @return A CompletableFuture that will be completed when the transaction is done, true if the transaction was successful, false if it failed.
+     */
+    CompletableFuture<Boolean> transaction(Runnable transactionRunnable);
+
+    /**
+     * Helper function to get a currency user from the cache.
+     * @param target The UUID of the target user.
+     * @param cacheUser The consumer to run with the currency user.
+     */
+    default void forCacheUser(UUID target, Consumer<CurrencyUser> cacheUser) {
+        Optional<CurrencyUser> localUser = CurrencyApi.getService().getLocalUser(target);
+        if (localUser.isPresent()) {
+            cacheUser.accept(localUser.get());
+            return;
+        }
+    }
+
+    /**
+     * Run a transaction and update the cache for the given user ids from the database.
+     * @param transactionRunnable The transaction to run.
+     * @param userIds The UUIDs of the users to update the cache for.
+     * @return A CompletableFuture that will be completed when the transaction is done, true if the transaction was successful, false if it failed.
+     */
+    default CompletableFuture<Boolean> transactionAndUpdateCacheFromDB(Runnable transactionRunnable, UUID... userIds) {
+        return transaction(transactionRunnable).thenApplyAsync(success -> {
+            if (!success) {
+                return false;
+            }
+
+            for (UUID userId : userIds) {
+                CurrencyUser user = CurrencyApi.getService().getUserFromDatabase(userId).join();
+                if (user != null) {
+                    CurrencyApi.getService().addLocalUser(user);
+                }
+            }
+            return true;
+        });
+    }
 }

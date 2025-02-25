@@ -24,7 +24,7 @@ public interface CurrencyUser {
      * @param linkerId An id to link multiple transactions together.
      * @param linkerReason A reason to link multiple transactions together.
      */
-    void pay(Currency currency, double amount, String reason, UUID linkerId, String linkerReason);
+    void deposit(Currency currency, double amount, String reason, UUID linkerId, String linkerReason);
 
     /**
      * Pay a certain amount of currency from one player to another.
@@ -32,8 +32,8 @@ public interface CurrencyUser {
      * @param amount The amount of currency to pay.
      * @param reason The reason for the payment.
      */
-    default void pay(Currency currency, double amount, String reason) {
-        pay(currency, amount, reason, null, null);
+    default void deposit(Currency currency, double amount, String reason) {
+        deposit(currency, amount, reason, null, null);
     }
 
     /**

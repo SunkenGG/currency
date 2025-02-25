@@ -55,18 +55,18 @@ public class WWCurrencyUser implements CurrencyUser {
     }
 
     @Override
-    public void pay(Currency currency, double amount, String reason, UUID linkerId, String linkerReason) {
-        currency.deposit(this.playerId, amount, reason, linkerId, linkerReason);
+    public void deposit(Currency currency, double amount, String reason, UUID linkerId, String linkerReason) {
+        this.balances.put(currency, this.balances.getOrDefault(currency, 0.0) + amount);
     }
 
     @Override
     public void withdraw(Currency currency, double amount, String reason, UUID linkerId, String linkerReason) {
-        currency.withdraw(this.playerId, amount, reason, linkerId, linkerReason);
+        this.balances.put(currency, this.balances.getOrDefault(currency, 0.0) - amount);
     }
 
     @Override
     public void set(Currency currency, double amount, String reason, UUID linkerId, String linkerReason) {
-        currency.set(this.playerId, amount, reason, linkerId, linkerReason);
+        this.balances.put(currency, amount);
     }
 
     public Map<Currency, Double> getBalanceMap() {
