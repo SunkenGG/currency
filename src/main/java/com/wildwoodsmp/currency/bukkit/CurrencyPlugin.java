@@ -2,8 +2,10 @@ package com.wildwoodsmp.currency.bukkit;
 
 import com.wildwoodsmp.currency.api.Currency;
 import com.wildwoodsmp.currency.api.CurrencyApi;
+import com.wildwoodsmp.currency.bukkit.cmd.BaseCommand;
 import com.wildwoodsmp.currency.impl.WWCurrency;
 import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -40,7 +42,7 @@ public final class CurrencyPlugin extends JavaPlugin {
             );
 
             CurrencyApi.getService().addCurrency(currency);
-            //TODO: command to add currency
+            Bukkit.getCommandMap().register("currency", new BaseCommand(currency));
         }
     }
 
