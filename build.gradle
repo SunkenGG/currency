@@ -1,9 +1,10 @@
 plugins {
     id 'java'
+    id 'com.gradleup.shadow' version '9.0.0-beta9'
 }
 
 group = 'wtf.casper'
-version = '1.0-SNAPSHOT'
+version = '1.0.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
@@ -17,12 +18,46 @@ repositories {
     }
 }
 
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
 dependencies {
     compileOnly "io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT"
     implementation 'org.mongodb:mongodb-driver-sync:5.3.0'
 
-    annotationProcessor 'org.projectlombok:lombok:1.18.28'
-    compileOnly 'org.projectlombok:lombok:1.18.28'
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
+    compileOnly 'org.projectlombok:lombok:1.18.34'
+}
+
+build {
+    dependsOn shadowJar
+}
+
+shadowJar {
+    archiveBaseName.set('Currency')
+    archiveClassifier.set('')
+    archiveVersion.set(version)
+    minimize()
+
+    relocate('org.bson', 'wtf.casper.currency.libs.org.bson')
+    relocate('org.mongodb', 'wtf.casper.currency.libs.org.mongodb')
+
+    // remove meta-INF
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA'
+    exclude 'META-INF/maven/**'
+    exclude 'META-INF/versions/**'
+    exclude 'META-INF/INDEX.LIST'
+    exclude 'META-INF/LICENSE'
+    exclude 'META-INF/NOTICE'
+    exclude 'META-INF/DEPENDENCIES'
+    exclude 'META-INF/NOTICE.txt'
+    exclude 'META-INF/LICENSE.txt'
+    exclude 'META-INF/DEPENDENCIES.txt'
+    exclude 'META-INF/versions/9/**'
+    exclude 'META-INF/native-image/**'
 }
 
 def targetJavaVersion = 21

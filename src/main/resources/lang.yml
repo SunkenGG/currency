@@ -1,4 +1,4 @@
-coins:
+coin:
   help:
     message:
       - "<gold><bold>COINS HELP MENU"
@@ -19,6 +19,10 @@ coins:
     message: "<white>%amount% <red>is not a valid amount"
   negative-balance-not-allowed:
     message: "<red>Negative balance is not allowed"
+  cannot-pay-yourself:
+    message: "<red>You cannot pay yourself"
+  insufficient-funds:
+    message: "<red>You do not have enough coins"
   payment-failed:
     message: "<red>Payment failed. Error: %error%"
   payment-success:

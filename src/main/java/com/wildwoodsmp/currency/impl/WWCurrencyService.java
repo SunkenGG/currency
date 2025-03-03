@@ -1,9 +1,11 @@
 package com.wildwoodsmp.currency.impl;
 
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.wildwoodsmp.currency.api.Currency;
 import com.wildwoodsmp.currency.api.CurrencyService;
 import com.wildwoodsmp.currency.api.CurrencyUser;
+import com.wildwoodsmp.currency.impl.mongo.MongoProvider;
 import org.bson.Document;
 
 import java.util.HashMap;
@@ -18,8 +20,9 @@ public class WWCurrencyService implements CurrencyService {
     private final Map<UUID, CurrencyUser> localUsersCache = new HashMap<>();
     private final MongoCollection<Document> userCollection;
 
-    public WWCurrencyService(MongoCollection<Document> userCollection) {
-        this.userCollection = userCollection;
+    public WWCurrencyService(String mongoUri, String mongoDatabase) {
+        MongoClient mongoClient = MongoProvider.getMongoClient(mongoUri);
+        this.userCollection = mongoClient.getDatabase(mongoDatabase).getCollection("users");
     }
 
     @Override

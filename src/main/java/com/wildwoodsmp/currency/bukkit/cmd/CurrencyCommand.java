@@ -5,6 +5,7 @@ import com.wildwoodsmp.currency.bukkit.CurrencyPlugin;
 import com.wildwoodsmp.currency.util.Placeholders;
 import com.wildwoodsmp.currency.util.StringUtilsPaper;
 import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.configuration.ConfigurationSection;
@@ -19,20 +20,32 @@ public abstract class CurrencyCommand extends BukkitCommand {
     protected final static CurrencyPlugin plugin = CurrencyPlugin.getPlugin(CurrencyPlugin.class);
     protected final Currency currency;
     private final List<CurrencyCommand> subCommands = new ArrayList<>();
+    private CurrencyCommand parent;
 
     public CurrencyCommand(@NotNull Currency currency, @NotNull String... aliases) {
         super(aliases[0]);
+        this.parent = null;
         this.currency = currency;
         this.description = currency.name() + " currency command";
         this.usageMessage = "/" + aliases[0];
-        for (@NotNull String alias : aliases) {
+        this.setAliases(new ArrayList<>());
+        for (String alias : aliases) {
+            if (alias == null) continue;
+
             this.getAliases().add(alias.toLowerCase());
         }
-        this.setPermission("currency." + currency.name().toLowerCase() + ".command." + aliases[0]);
+
+        StringBuilder parentPath = new StringBuilder();
+        while (parent != null) {
+            parentPath.insert(0, parent.getName() + ".");
+            parent = parent.getParent();
+        }
+        this.setPermission("currency." + currency.name().toLowerCase() + ".command." + parentPath + aliases[0]);
     }
 
     public void addSubCommand(@NotNull CurrencyCommand command) {
         subCommands.add(command);
+        command.setParent(this);
     }
 
     @Override
@@ -56,6 +69,9 @@ public abstract class CurrencyCommand extends BukkitCommand {
                 String[] newArgs = new String[args.length - 1];
                 System.arraycopy(args, 1, newArgs, 0, newArgs.length);
 
+                if (!subCommand.testPermission(commandSender)) {
+                    return true;
+                }
                 subCommand.execute(commandSender, label, newArgs);
                 return true;
             }
@@ -67,24 +83,33 @@ public abstract class CurrencyCommand extends BukkitCommand {
 
     @Override
     public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) throws IllegalArgumentException {
+        if (!testPermission(sender)) {
+            return List.of();
+        }
+
         if (args.length == 0) {
-            return super.tabComplete(sender, alias, args);
+            return this.executeTabComplete(sender, alias, args);
         }
 
         if (subCommands.isEmpty()) {
-            return super.tabComplete(sender, alias, args);
+            return this.executeTabComplete(sender, alias, args);
         }
 
         for (CurrencyCommand subCommand : subCommands) {
-            if (subCommand.getName().equalsIgnoreCase(args[0])) {
+            Bukkit.broadcastMessage("subCommand: " + subCommand.getName() + " aliases: " + subCommand.getAliases());
+            if (subCommand.getAliases().contains(args[0].toLowerCase())) {
+                if (!subCommand.testPermissionSilent(sender)) {
+                    return List.of();
+                }
+
                 String[] newArgs = new String[args.length - 1];
                 System.arraycopy(args, 1, newArgs, 0, newArgs.length);
 
-                return subCommand.tabComplete(sender, alias, newArgs);
+                return subCommand.executeTabComplete(sender, alias, newArgs);
             }
         }
 
-        return super.tabComplete(sender, alias, args);
+        return this.executeTabComplete(sender, alias, args);
     }
 
     public void sendLang(@NotNull CommandSender sender, String key, Placeholders placeholders) {
@@ -96,5 +121,15 @@ public abstract class CurrencyCommand extends BukkitCommand {
         StringUtilsPaper.sendMessage(section.getConfigurationSection(key), sender, placeholders);
     }
 
+    public void sendLang(@NotNull CommandSender sender, String key) {
+        sendLang(sender, key, Placeholders.EMPTY);
+    }
+
+    public void setParent(CurrencyCommand parent) {
+        this.parent = parent;
+    }
+
     public abstract void executeCommand(@NotNull CommandSender commandSender, @NotNull String label, @NotNull String[] args);
+
+    public abstract @NotNull List<String> executeTabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) throws IllegalArgumentException;
 }

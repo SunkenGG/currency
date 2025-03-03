@@ -2,12 +2,14 @@ package com.wildwoodsmp.currency.bukkit.cmd;
 
 import com.wildwoodsmp.currency.api.Currency;
 import com.wildwoodsmp.currency.util.Placeholders;
+import com.wildwoodsmp.currency.util.Predicates;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.UUID;
 
 public class BalanceCommand extends CurrencyCommand {
@@ -21,8 +23,16 @@ public class BalanceCommand extends CurrencyCommand {
         OfflinePlayer target;
 
         if (args.length == 0) {
-            target = (OfflinePlayer) commandSender;
+            if (!(commandSender instanceof Player player)) {
+                sendLang(commandSender, "balance-usage", Placeholders.EMPTY);
+                return;
+            }
+            target = player;
         } else {
+            if (args.length > 1) {
+                sendLang(commandSender, "balance-usage", Placeholders.EMPTY);
+                return;
+            }
             target = Bukkit.getServer().getOfflinePlayerIfCached(args[0]);
         }
 
@@ -39,5 +49,35 @@ public class BalanceCommand extends CurrencyCommand {
             }
             sendLang(commandSender, "balance-other", new Placeholders().add("player", target.getName()).add("balance", balance));
         });
+    }
+
+    @Override
+    public @NotNull List<String> executeTabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) throws IllegalArgumentException {
+        if (args.length == 0) {
+            return Bukkit.getServer().getOnlinePlayers().stream()
+                    .filter(player -> {
+                        if (sender instanceof Player p) {
+                            return !player.getUniqueId().equals(p.getUniqueId());
+                        }
+                        return true;
+                    })
+                    .map(Player::getName)
+                    .toList();
+        }
+
+
+        if (args.length == 1) {
+            return Bukkit.getServer().getOnlinePlayers().stream()
+                    .filter(player -> {
+                        if (sender instanceof Player p) {
+                            return !player.getUniqueId().equals(p.getUniqueId());
+                        }
+                        return true;
+                    })
+                    .map(Player::getName)
+                    .filter(name -> name.toLowerCase().startsWith(args[0].toLowerCase()))
+                    .toList();
+        }
+        return List.of();
     }
 }

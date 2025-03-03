@@ -3,13 +3,16 @@ package com.wildwoodsmp.currency.bukkit.cmd.eco;
 import com.wildwoodsmp.currency.api.Currency;
 import com.wildwoodsmp.currency.bukkit.cmd.CurrencyCommand;
 import com.wildwoodsmp.currency.util.Placeholders;
+import com.wildwoodsmp.currency.util.Predicates;
 import lombok.extern.java.Log;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Log
 public class EcoTakeCommand extends CurrencyCommand {
@@ -63,5 +66,40 @@ public class EcoTakeCommand extends CurrencyCommand {
                 }
             });
         });
+    }
+
+    @Override
+    public @NotNull List<String> executeTabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args, Placeholders placeholders) throws IllegalArgumentException {
+        if (args.length == 0) {
+            return Bukkit.getServer().getOnlinePlayers().stream()
+                    .filter(player -> {
+                        if (sender instanceof Player p) {
+                            return !player.getUniqueId().equals(p.getUniqueId());
+                        }
+                        return true;
+                    })
+                    .map(Player::getName)
+                    .toList();
+        }
+
+        if (args.length == 1) {
+            return Bukkit.getServer().getOnlinePlayers().stream()
+                    .filter(player -> {
+                        if (sender instanceof Player p) {
+                            return !player.getUniqueId().equals(p.getUniqueId());
+                        }
+                        return true;
+                    })
+                    .map(Player::getName)
+                    .filter(name -> name.toLowerCase().startsWith(args[0].toLowerCase()))
+                    .toList();
+        }
+
+        if (args.length == 2) {
+            List<String> list = List.of("100", "1000", "10000", "100000", "1000000");
+            return list.stream().filter(s -> s.startsWith(args[1])).toList();
+        }
+
+        return List.of("reason...");
     }
 }

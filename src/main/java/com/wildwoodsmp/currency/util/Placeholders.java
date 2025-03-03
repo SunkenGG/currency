@@ -38,11 +38,19 @@ public class Placeholders {
 
         for (int i = 0; i < args.length; i += 2) {
             if (!(args[i] instanceof String)) {
-                throw new IllegalArgumentException("Key must be a string");
+                try {
+                    args[i] = args[i] + "";
+                } catch (Exception e) {
+                    throw new IllegalArgumentException("Key must be a string or convertible to a string");
+                }
             }
 
             if (!(args[i + 1] instanceof String)) {
-                throw new IllegalArgumentException("Value must be a component");
+                try {
+                    args[i + 1] = args[i + 1] + "";
+                } catch (Exception e) {
+                    throw new IllegalArgumentException("Value must be a string or convertible to a string");
+                }
             }
 
             placeholders.put((String) args[i], (String) args[i + 1]);

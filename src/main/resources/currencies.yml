@@ -1,9 +1,8 @@
 coins:
-  singular: coin
+  name: coin
   plural: coins
   symbol: "⛃"
   allows-negatives: false
   allows-pay: true
-  decimal-places: 2
   default: 0
   format: ".2f"

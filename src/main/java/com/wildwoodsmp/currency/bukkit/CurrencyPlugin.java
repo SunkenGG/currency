@@ -4,6 +4,7 @@ import com.wildwoodsmp.currency.api.Currency;
 import com.wildwoodsmp.currency.api.CurrencyApi;
 import com.wildwoodsmp.currency.bukkit.cmd.BaseCommand;
 import com.wildwoodsmp.currency.impl.WWCurrency;
+import com.wildwoodsmp.currency.impl.WWCurrencyService;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -25,8 +26,11 @@ public final class CurrencyPlugin extends JavaPlugin {
         saveConfig();
         reloadConfig();
 
+
         String mongoUri = getConfig().getString("mongo-uri");
         String mongoDatabase = getConfig().getString("mongo-database");
+
+        CurrencyApi.setService(new WWCurrencyService(mongoUri, mongoDatabase));
 
         for (String key : currenciesConfig.getKeys(false)) {
             Currency currency = new WWCurrency(
@@ -34,9 +38,9 @@ public final class CurrencyPlugin extends JavaPlugin {
                     currenciesConfig.getString(key + ".plural"),
                     currenciesConfig.getString(key + ".symbol"),
                     currenciesConfig.getBoolean(key + ".allows-negatives"),
-                    currenciesConfig.getBoolean(key + ".allows-pays"),
+                    currenciesConfig.getBoolean(key + ".allows-pay"),
                     currenciesConfig.getString(key + ".format"),
-                    currenciesConfig.getDouble(key + ".default-balance"),
+                    currenciesConfig.getDouble(key + ".default"),
                     mongoUri,
                     mongoDatabase
             );
