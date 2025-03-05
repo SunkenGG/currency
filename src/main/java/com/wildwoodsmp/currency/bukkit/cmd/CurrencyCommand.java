@@ -96,7 +96,6 @@ public abstract class CurrencyCommand extends BukkitCommand {
         }
 
         for (CurrencyCommand subCommand : subCommands) {
-            Bukkit.broadcastMessage("subCommand: " + subCommand.getName() + " aliases: " + subCommand.getAliases());
             if (subCommand.getAliases().contains(args[0].toLowerCase())) {
                 if (!subCommand.testPermissionSilent(sender)) {
                     return List.of();
@@ -105,7 +104,7 @@ public abstract class CurrencyCommand extends BukkitCommand {
                 String[] newArgs = new String[args.length - 1];
                 System.arraycopy(args, 1, newArgs, 0, newArgs.length);
 
-                return subCommand.executeTabComplete(sender, alias, newArgs);
+                return subCommand.tabComplete(sender, alias, newArgs);
             }
         }
 

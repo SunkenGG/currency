@@ -193,6 +193,8 @@ public interface Currency {
      */
     List<CurrencyUser> getTopBalances(int limit, int skip);
 
+    long currencyUserCount();
+
     /**
      * Run a transaction
      * @param transactionRunnable The transaction to run.

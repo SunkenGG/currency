@@ -26,7 +26,6 @@ public final class CurrencyPlugin extends JavaPlugin {
         saveConfig();
         reloadConfig();
 
-
         String mongoUri = getConfig().getString("mongo-uri");
         String mongoDatabase = getConfig().getString("mongo-database");
 
@@ -57,7 +56,9 @@ public final class CurrencyPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-
+        CurrencyApi.getService().currencies().forEach((s, currency) -> {
+            Bukkit.getCommandMap().getKnownCommands().remove(currency.name());
+        });
     }
 
     @Override

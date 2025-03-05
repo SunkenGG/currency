@@ -29,7 +29,7 @@ public class EcoSetCommand extends CurrencyCommand {
             return;
         }
 
-        String targetName = args[1];
+        String targetName = args[0];
         OfflinePlayer target = Bukkit.getOfflinePlayerIfCached(targetName);
 
         if (target == null) {
@@ -39,7 +39,7 @@ public class EcoSetCommand extends CurrencyCommand {
 
         double amount;
         try {
-            amount = Double.parseDouble(args[2]);
+            amount = Double.parseDouble(args[1]);
         } catch (NumberFormatException e) {
             sendLang(commandSender, "invalid-amount", new Placeholders().add("amount", args[2]));
             return;
@@ -50,7 +50,7 @@ public class EcoSetCommand extends CurrencyCommand {
             return;
         }
 
-        String reason = String.join(" ", Arrays.copyOfRange(args, 3, args.length));
+        String reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             this.currency.transaction(() -> {
@@ -84,7 +84,7 @@ public class EcoSetCommand extends CurrencyCommand {
     }
 
     @Override
-    public @NotNull List<String> executeTabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args, Placeholders placeholders) throws IllegalArgumentException {
+    public @NotNull List<String> executeTabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) throws IllegalArgumentException {
         if (args.length == 0) {
             return Bukkit.getServer().getOnlinePlayers().stream()
                     .filter(player -> {

@@ -64,7 +64,7 @@ public class PayCommand extends CurrencyCommand {
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             if (!this.currency.has(player.getUniqueId(), amount)) {
-                sendLang(commandSender, "insufficient-funds", new Placeholders().add("amount", amount));
+                sendLang(commandSender, "insufficient-funds", new Placeholders().add("amount", currency.format(amount)));
                 return;
             }
 
@@ -73,7 +73,7 @@ public class PayCommand extends CurrencyCommand {
                 this.currency.withdraw(player.getUniqueId(), amount, "Payment to " + target.getName(), linkerId, "Linked to payment to " + target.getName());
                 this.currency.deposit(target.getUniqueId(), amount, "Payment from " + player.getName(), linkerId, "Linked to payment from " + player.getName());
             }).thenAccept(success -> {
-                if (!success.booleanValue()) {
+                if (!success) {
                     sendLang(commandSender, "payment-failed", new Placeholders().add("error", "Transaction failed"));
                     log.warning("Failed to process payment: Transaction failed for " + player.getName() + " to " + target.getName() + " of " + amount + " " + this.currency.name());
                     return;

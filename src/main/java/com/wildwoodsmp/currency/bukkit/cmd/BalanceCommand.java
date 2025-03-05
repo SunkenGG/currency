@@ -44,10 +44,10 @@ public class BalanceCommand extends CurrencyCommand {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             double balance = currency.balance(target.getUniqueId());
             if (commandSender instanceof Player player && player.getUniqueId().equals(target.getUniqueId())) {
-                sendLang(commandSender, "balance", new Placeholders().add("balance", balance));
+                sendLang(commandSender, "balance", new Placeholders().add("balance", currency.format(balance)));
                 return;
             }
-            sendLang(commandSender, "balance-other", new Placeholders().add("player", target.getName()).add("balance", balance));
+            sendLang(commandSender, "balance-other", new Placeholders().add("player", target.getName()).add("balance", currency.format(balance)));
         });
     }
 

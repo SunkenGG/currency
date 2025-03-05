@@ -69,7 +69,7 @@ public class EcoTakeCommand extends CurrencyCommand {
     }
 
     @Override
-    public @NotNull List<String> executeTabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args, Placeholders placeholders) throws IllegalArgumentException {
+    public @NotNull List<String> executeTabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) throws IllegalArgumentException {
         if (args.length == 0) {
             return Bukkit.getServer().getOnlinePlayers().stream()
                     .filter(player -> {

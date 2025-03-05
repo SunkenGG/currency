@@ -1,49 +1,64 @@
 coin:
   help:
     message:
-      - "<gold><bold>COINS HELP MENU"
-      - "<gray>/coins - View your balance"
-      - "<gray>/coins pay <player> <amount> - Pay a player"
-      - "<gray>/coins bal/balance [player] - View a player's balance"
-      - "<gray>/coins baltop - View the top balances"
-      - "<gray>/coins eco give <player> <amount> <reason> - Give a player coins"
-      - "<gray>/coins eco take <player> <amount> <reason> - Take coins from a player"
-      - "<gray>/coins eco set <player> <amount> <reason> - Set a player's balance"
+      - "<#FBE543><bold>COINS HELP MENU"
+      - "<white> ● /coins"
+      - "<white> ● /coins pay <player> <amount>"
+      - "<white> ● /coins bal/balance [player]"
+      - "<white> ● /coins baltop [page]"
+      - "<white> ● /coins ecoadmin"
+      - "<white> ● /coins eco give <player> <amount> <reason>"
+      - "<white> ● /coins eco take <player> <amount> <reason>"
+      - "<white> ● /coins eco set <player> <amount> <reason>"
+  admin-help:
+    message:
+      - "<#FBE543><bold>COINS ADMIN HELP MENU"
+      - "<white> ● /coins ecoadmin reload"
   player-not-found:
-    message: "<red>Could not find user <white>%player%"
+    message: "<#ff441e>⚠ Could not find user <white>%player%"
   balance:
-    message: "<gold>Your coins: <white>%balance%"
+    message: "<#FBE543>Your coins: <white>%balance%"
   balance-other:
-    message: "<gold>%player%'s coins: <white>%balance%"
+    message: "<#FBE543>%player%'s coins: <white>%balance%"
   invalid-amount:
-    message: "<white>%amount% <red>is not a valid amount"
+    message: "<#ff441e>⚠ <white>%amount% <#ff441e>is not a valid amount"
   negative-balance-not-allowed:
-    message: "<red>Negative balance is not allowed"
+    message: "<#ff441e>⚠ Negative balance is not allowed"
   cannot-pay-yourself:
-    message: "<red>You cannot pay yourself"
+    message: "<#ff441e>⚠ You cannot pay yourself"
   insufficient-funds:
-    message: "<red>You do not have enough coins"
+    message: "<#ff441e>⚠ You do not have enough coins"
   payment-failed:
-    message: "<red>Payment failed. Error: %error%"
+    message: "<#ff441e>⚠ Payment failed. Error: %error%"
   payment-success:
-    message: "<green>Paid <white>%amount%<green> to <white>%player%"
+    message: "<#a7ff27>Paid <white>%amount%<#a7ff27> to <white>%player%"
   payment-success-receive:
-    message: "<green>Received <white>%amount%<green> from <white>%player%"
+    message: "<#a7ff27>Received <white>%amount%<#a7ff27> from <white>%player%"
   eco-set-usage:
-    message: "<red>Usage: /coins eco set <player> <amount> <reason>"
+    message: "<#ff441e>Usage: /coins eco set <player> <amount> <reason>"
   eco-set-error:
-    message: "<red>Could not set balance for <white>%player%<red>. Error: %error%"
+    message: "<#ff441e>⚠ Could not set balance for <white>%player%<#ff441e>. Error: %error%"
   eco-set-success:
-    message: "<green>Set balance for <white>%player%<green> to <white>%amount%"
+    message: "<#a7ff27>Set balance for <white>%player%<#a7ff27> to <white>%amount%"
   eco-give-usage:
-    message: "<red>Usage: /coins eco give <player> <amount> <reason>"
+    message: "<#ff441e>Usage: /coins eco give <player> <amount> <reason>"
   eco-give-error:
-    message: "<red>Could not give coins to <white>%player%<red>. Error: %error%"
+    message: "<#ff441e>⚠ Could not give coins to <white>%player%<#ff441e>. Error: %error%"
   eco-give-success:
-    message: "<green>Gave <white>%amount%<green> coins to <white>%player%"
+    message: "<#a7ff27>Gave <white>%amount%<#a7ff27> coins to <white>%player%"
   eco-take-usage:
-    message: "<red>Usage: /coins eco take <player> <amount> <reason>"
+    message: "<#ff441e>Usage: /coins eco take <player> <amount> <reason>"
   eco-take-error:
-    message: "<red>Could not take coins from <white>%player%<red>. Error: %error%"
+    message: "<#ff441e>⚠ Could not take coins from <white>%player%<#ff441e>. Error: %error%"
   eco-take-success:
-    message: "<green>Took <white>%amount%<green> coins from <white>%player%"
+    message: "<#a7ff27>Took <white>%amount%<#a7ff27> coins from <white>%player%"
+  invalid-page:
+    message: "<#ff441e>⚠ <white>%page%<#ff441e> is not a valid page"
+  baltop-empty:
+    message: "<#ff441e>⚠ No players found"
+  baltop-header:
+    message: "<#FBE543><bold>COINS BALTOP PAGE <white>%page%<#FBE543> - <white>%total%<#FBE543> players"
+  baltop-line:
+    message: "<white>#%rank%<#FBE543> - <white>%player%<#FBE543> - <white>%balance%"
+  baltop-footer:
+    message: "<#FBE543>Page <white>%page%<#FBE543> of <white>%total-pages%"

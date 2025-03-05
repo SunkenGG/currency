@@ -297,6 +297,11 @@ public class WWCurrency implements Currency {
     }
 
     @Override
+    public long currencyUserCount() {
+        return userCollection.countDocuments();
+    }
+
+    @Override
     public CompletableFuture<Boolean> transaction(Runnable transactionRunnable) {
         return CompletableFuture.supplyAsync(() -> {
             ClientSession session = mongoDriver.getMongoClient().startSession();

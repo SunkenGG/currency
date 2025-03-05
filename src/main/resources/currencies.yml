@@ -5,4 +5,4 @@ coins:
   allows-negatives: false
   allows-pay: true
   default: 0
-  format: ".2f"
+  format: "%.0f"
