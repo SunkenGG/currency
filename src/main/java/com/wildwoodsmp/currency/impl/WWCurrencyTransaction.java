@@ -20,6 +20,7 @@ public class WWCurrencyTransaction implements CurrencyTransaction {
     private final Instant timestamp;
     private final UUID linkerId;
     private final String linkerReason;
+    private boolean deleted;
 
     public WWCurrencyTransaction(Currency currency, UUID id, double amount, CurrencyTransactionType type, UUID user, String reason, Instant timestamp, Optional<UUID> linkerId, Optional<String> linkerReason) {
         this.currency = currency;
@@ -31,6 +32,7 @@ public class WWCurrencyTransaction implements CurrencyTransaction {
         this.timestamp = timestamp;
         this.linkerId = linkerId.orElse(null);
         this.linkerReason = linkerReason.orElse(null);
+        this.deleted = false;
     }
 
     public WWCurrencyTransaction(Document document) {
@@ -43,6 +45,7 @@ public class WWCurrencyTransaction implements CurrencyTransaction {
         this.timestamp = Instant.ofEpochMilli(document.getLong("timestamp"));
         this.linkerId = document.containsKey("linkerId") ? UUID.fromString(document.getString("linkerId")) : null;
         this.linkerReason = document.containsKey("linkerReason") ? document.getString("linkerReason") : null;
+        this.deleted = document.containsKey("deleted") && document.getBoolean("deleted");
     }
 
     public Document toDocument() {
@@ -60,6 +63,7 @@ public class WWCurrencyTransaction implements CurrencyTransaction {
         if (linkerReason != null) {
             document.put("linkerReason", linkerReason);
         }
+        document.put("deleted", deleted);
         return document;
     }
 
@@ -106,5 +110,13 @@ public class WWCurrencyTransaction implements CurrencyTransaction {
     @Override
     public Optional<String> linkerReason() {
         return Optional.ofNullable(linkerReason);
+    }
+
+    public void delete() {
+        this.deleted = true;
+    }
+
+    public boolean deleted() {
+        return deleted;
     }
 }

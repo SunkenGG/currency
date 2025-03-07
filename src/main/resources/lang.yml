@@ -14,6 +14,10 @@ coin:
     message:
       - "<#FBE543><bold>COINS ADMIN HELP MENU"
       - "<white> ● /coins ecoadmin reload"
+  invalid-args:
+    message: "<#ff441e>⚠ Invalid arguments. Use <white>/coins help<#ff441e> for help"
+  invalid-usage:
+    message: "<#ff441e>⚠ Invalid usage. Use <white>/coins help<#ff441e> for help"
   player-not-found:
     message: "<#ff441e>⚠ Could not find user <white>%player%"
   balance:
@@ -62,3 +66,39 @@ coin:
     message: "<white>#%rank%<#FBE543> - <white>%player%<#FBE543> - <white>%balance%"
   baltop-footer:
     message: "<#FBE543>Page <white>%page%<#FBE543> of <white>%total-pages%"
+  transactionhistory-empty:
+    message: "<#ff441e>⚠ No transactions found"
+  transactionhistory-header:
+    message: "<#FBE543><bold>COINS TRANSACTION HISTORY PAGE <white>%page%<#FBE543> - <white>%total%<#FBE543> transactions"
+  transactionhistory-line:
+    message:
+      - "<white>#%id%"
+      - "<white>  ● <#FBE543>User: <white>%user%"
+      - "<white>  ● <#FBE543>Amount: <white>%amount%"
+      - "<white>  ● <#FBE543>Reason: <white>%reason%"
+      - "<white>  ● <#FBE543>Date: <white>%timestamp%"
+      - "<white>  ● <#FBE543>Type: <white>%type%"
+      - "<white>  ● <#FBE543>Linkage: <white>%linkerId%</white><dark_gray> (<gray>%linkerReason%<dark_gray>)"
+      - "<#ff000d>       <hover:show_text:Undo Payment><click:run_command:/coins ecoadmin undo %id%><#ff000d>[Undo]</click>"
+  transactionhistory-footer:
+    message: "<#FBE543>Page <white>%page%<#FBE543> of <white>%total-pages%"
+  deletedtransactionhistory-header:
+    message: "<#FBE543><bold>COINS DELETED TRANSACTION HISTORY PAGE <white>%page%<#FBE543> - <white>%total%<#FBE543> transactions"
+  deletedtransactionhistory-line:
+    message:
+      - "<white>#%id%"
+      - "<white>  ● <#FBE543>User: <white>%user%"
+      - "<white>  ● <#FBE543>Amount: <white>%amount%"
+      - "<white>  ● <#FBE543>Reason: <white>%reason%"
+      - "<white>  ● <#FBE543>Date: <white>%timestamp%"
+      - "<white>  ● <#FBE543>Type: <white>%type%"
+      - "<white>  ● <#FBE543>Linkage: <white>%linkerId%</white><dark_gray> (<gray>%linkerReason%<dark_gray>)"
+      - "<#ff000d>       <hover:show_text:Redo Payment><click:run_command:/coins ecoadmin redo %id%><#72b043>[Redo]</click>"
+  deletedtransactionhistory-footer:
+    message: "<#FBE543>Page <white>%page%<#FBE543> of <white>%total-pages%"
+  undo-success:
+    message: "<#a7ff27>Transaction <white>#%id%<#a7ff27> has been undone"
+  redo-success:
+    message: "<#a7ff27>Transaction <white>#%id%<#a7ff27> has been redone"
+  recountuser-success:
+    message: "<#a7ff27>Recounted user <white>%player%<#a7ff27>'s balance"

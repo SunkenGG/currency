@@ -151,6 +151,76 @@ public interface Currency {
     void invalidateTransaction(UUID transactionId);
 
     /**
+     * Validate a transaction.
+     * @param transactionId The ID of the transaction to validate.
+     */
+    void validateTransaction(UUID transactionId);
+
+    /**
+     * Get the transactions of a player.
+     * @param user The UUID of the player.
+     * @param limit The number of transactions to get.
+     * @param skip The number of transactions to skip.
+     * @return A list of transactions for the player.
+     */
+    List<CurrencyTransaction> getTransactions(UUID user, int limit, int skip);
+
+    /**
+     * Get the transactions of a player.
+     * @param user The UUID of the player.
+     * @return A list of transactions for the player.
+     */
+    default List<CurrencyTransaction> getTransactions(UUID user) {
+        return getTransactions(user, 0, 0);
+    }
+
+    /**
+     * Get the deleted transactions of a player.
+     * @param user The UUID of the player.
+     * @param limit The number of transactions to get.
+     * @param skip The number of transactions to skip.
+     * @return A list of deleted transactions for the player.
+     */
+    List<CurrencyTransaction> getDeletedTransactions(UUID user, int limit, int skip);
+
+    /**
+     * Get the deleted transactions of a player.
+     * @param user The UUID of the player.
+     * @return A list of deleted transactions for the player.
+     */
+    default List<CurrencyTransaction> getDeletedTransactions(UUID user) {
+        return getDeletedTransactions(user, 0, 0);
+    }
+
+    /**
+     * Get a transaction by its ID.
+     * @param transactionId The ID of the transaction.
+     * @return The transaction object.
+     */
+    CurrencyTransaction getTransaction(UUID transactionId);
+
+    /**
+     * Get a deleted transaction by its ID.
+     * @param transactionId The ID of the transaction.
+     * @return The transaction object.
+     */
+    CurrencyTransaction getDeletedTransaction(UUID transactionId);
+
+    /**
+     * Get the total number of transactions for a player.
+     * @param user The UUID of the player.
+     * @return The total number of transactions.
+     */
+    long transactionsCount(UUID user);
+
+    /**
+     * Get the total number of deleted transactions for a player.
+     * @param user The UUID of the player.
+     * @return The total number of deleted transactions.
+     */
+    long deletedTransactionsCount(UUID user);
+
+    /**
      * This will recount all transactions to recalculate the balannce of this user, this can
      * also cause a cascade effect of other players being recalculated too.
      * @param user The UUID of the player.

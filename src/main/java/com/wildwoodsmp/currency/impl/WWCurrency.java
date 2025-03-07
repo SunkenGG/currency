@@ -193,9 +193,102 @@ public class WWCurrency implements Currency {
 
         Document transaction = transactionCollection.find(new Document("_id", transactionId.toString())).first();
         if (transaction == null) throw new IllegalArgumentException("Transaction not found");
+        transaction.put("deleted", true);
+
+        if (transaction.containsKey("linkerId")) {
+            getLinkedTransactions(UUID.fromString(transaction.getString("linkerId"))).forEach(linkedTransaction -> {
+                if (((WWCurrencyTransaction) linkedTransaction).deleted()) {
+                    return;
+                }
+
+                transactionCollection.deleteOne(new Document("_id", linkedTransaction.id().toString()));
+
+                Document document = ((WWCurrencyTransaction) linkedTransaction).toDocument();
+                document.put("deleted", true);
+
+                deletedTransactionCollection.insertOne(document);
+            });
+        }
 
         deletedTransactionCollection.insertOne(transaction);
         transactionCollection.deleteOne(new Document("_id", transactionId.toString()));
+    }
+
+    @Override
+    public void validateTransaction(UUID transactionId) {
+        if (transactionId == null) throw new IllegalArgumentException("Transaction ID cannot be null");
+
+        Document transaction = deletedTransactionCollection.find(new Document("_id", transactionId.toString())).first();
+        if (transaction == null) throw new IllegalArgumentException("Transaction not found");
+        transaction.put("deleted", false);
+
+        if (transaction.containsKey("linkerId")) {
+            getLinkedTransactions(UUID.fromString(transaction.getString("linkerId"))).forEach(linkedTransaction -> {
+                if (!((WWCurrencyTransaction) linkedTransaction).deleted()) {
+                    return;
+                }
+
+                deletedTransactionCollection.deleteOne(new Document("_id", linkedTransaction.id().toString()));
+
+                Document document = ((WWCurrencyTransaction) linkedTransaction).toDocument();
+                document.put("deleted", false);
+
+                transactionCollection.insertOne(document);
+            });
+        }
+
+        transactionCollection.insertOne(transaction);
+        deletedTransactionCollection.deleteOne(new Document("_id", transactionId.toString()));
+    }
+
+    @Override
+    public List<CurrencyTransaction> getTransactions(UUID user, int limit, int skip) {
+        List<CurrencyTransaction> transactions = new SortedList<>(Comparator.comparing(CurrencyTransaction::timestamp));
+        transactionCollection.find(new Document("user", user.toString()))
+                .sort(new Document("timestamp", -1))
+                .skip(skip)
+                .limit(limit)
+                .forEach(doc -> transactions.add(new WWCurrencyTransaction(doc)));
+
+        return transactions;
+    }
+
+    @Override
+    public List<CurrencyTransaction> getDeletedTransactions(UUID user, int limit, int skip) {
+        List<CurrencyTransaction> transactions = new SortedList<>(Comparator.comparing(CurrencyTransaction::timestamp));
+        deletedTransactionCollection.find(new Document("user", user.toString()))
+                .sort(new Document("timestamp", -1))
+                .skip(skip)
+                .limit(limit)
+                .forEach(doc -> transactions.add(new WWCurrencyTransaction(doc)));
+
+        return transactions;
+    }
+
+    @Override
+    public CurrencyTransaction getTransaction(UUID transactionId) {
+        Document document = transactionCollection.find(new Document("_id", transactionId.toString())).first();
+        if (document == null) return null;
+
+        return new WWCurrencyTransaction(document);
+    }
+
+    @Override
+    public CurrencyTransaction getDeletedTransaction(UUID transactionId) {
+        Document document = deletedTransactionCollection.find(new Document("_id", transactionId.toString())).first();
+        if (document == null) return null;
+
+        return new WWCurrencyTransaction(document);
+    }
+
+    @Override
+    public long transactionsCount(UUID user) {
+        return transactionCollection.countDocuments(new Document("user", user.toString()));
+    }
+
+    @Override
+    public long deletedTransactionsCount(UUID user) {
+        return deletedTransactionCollection.countDocuments(new Document("user", user.toString()));
     }
 
     @Override
@@ -252,7 +345,10 @@ public class WWCurrency implements Currency {
             balance = 0;
         }
 
-        set(user, balance, "Recounted balance", null, null); //TODO: verify this works
+        double finalBalance = balance;
+        transaction(() -> {
+            set(user, finalBalance, "Recounted balance", null, null); //TODO: verify this works
+        });
     }
 
     @Override
