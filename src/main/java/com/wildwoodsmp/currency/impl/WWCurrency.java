@@ -292,16 +292,15 @@ public class WWCurrency implements Currency {
     }
 
     @Override
-    public List<UUID> recalculateBalance(UUID user, Currency currency, int depth) {
+    public List<UUID> recalculateBalance(UUID user, int depth) {
         if (user == null) throw new IllegalArgumentException("User cannot be null");
-        if (currency == null) throw new IllegalArgumentException("Currency cannot be null");
         if (depth < 0) throw new IllegalArgumentException("Depth cannot be less than 0");
         if (depth > MAX_DEPTH) return List.of();
 
         List<UUID> recalculatedUsers = new ArrayList<>();
         double startingBalance = balance(user);
         double balance = 0;
-        FindIterable<Document> documents = transactionCollection.find(new Document("user", user.toString()).append("currency", currency.name()));
+        FindIterable<Document> documents = transactionCollection.find(new Document("user", user.toString()).append("currency", this.name()));
         for (Document document : documents) {
             WWCurrencyTransaction transaction = new WWCurrencyTransaction(document);
             switch (transaction.type()) {
@@ -316,7 +315,7 @@ public class WWCurrency implements Currency {
                         return;
                     }
 
-                    recalculatedUsers.addAll(recalculateBalance(linkedTransaction.user(), currency, depth+1));
+                    recalculatedUsers.addAll(recalculateBalance(linkedTransaction.user(), depth+1));
                 });
             }
         }
@@ -330,8 +329,8 @@ public class WWCurrency implements Currency {
     }
 
     @Override
-    public void recount(UUID user, Currency currency) {
-        List<CurrencyTransaction> list = history(user, currency);
+    public void recount(UUID user) {
+        List<CurrencyTransaction> list = history(user);
         double balance = 0;
         for (CurrencyTransaction transaction : list) {
             switch (transaction.type()) {
@@ -352,11 +351,11 @@ public class WWCurrency implements Currency {
     }
 
     @Override
-    public List<CurrencyTransaction> history(UUID user, Currency currency) {
+    public List<CurrencyTransaction> history(UUID user) {
         List<CurrencyTransaction> transactions = new SortedList<>(Comparator.comparing(CurrencyTransaction::timestamp));
         FindIterable<Document> documents = transactionCollection.find(
                 new Document("user", user.toString())
-                        .append("currency", currency.name())
+                        .append("currency", this.name())
         );
         for (Document document : documents) {
             transactions.add(new WWCurrencyTransaction(document));

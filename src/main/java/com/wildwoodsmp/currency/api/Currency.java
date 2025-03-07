@@ -224,29 +224,32 @@ public interface Currency {
      * This will recount all transactions to recalculate the balannce of this user, this can
      * also cause a cascade effect of other players being recalculated too.
      * @param user The UUID of the player.
-     * @param currency The currency to recalculate.
      * @return A list of UUIDs of players that were recalculated.
      */
-    default List<UUID> recalculateBalance(UUID user, Currency currency) {
-        return recalculateBalance(user, currency, 0);
+    default List<UUID> recalculateBalance(UUID user) {
+        return recalculateBalance(user, 0);
     }
 
-    List<UUID> recalculateBalance(UUID user, Currency currency, int depth);
+    /**
+     * This will recount all transactions to recalculate the balannce of this user, this can
+     * @param user The UUID of the player.
+     * @param depth The depth of the recursion, this is used to prevent infinite loops.
+     * @return A list of UUIDs of players that were recalculated.
+     */
+    List<UUID> recalculateBalance(UUID user, int depth);
 
     /**
      * Get the transaction history of a player.
      * @param user The UUID of the player.
-     * @param currency The currency to get the history for.
      * @return A list of transactions for the player.
      */
-    List<CurrencyTransaction> history(UUID user, Currency currency);
+    List<CurrencyTransaction> history(UUID user);
 
     /**
      * Recounts the balance of a user based off the transaction history.
      * @param user The UUID of the player.
-     * @param currency The currency to recount.
      */
-    void recount(UUID user, Currency currency);
+    void recount(UUID user);
 
     /**
      * Get the transaction history of a linker id
@@ -263,6 +266,10 @@ public interface Currency {
      */
     List<CurrencyUser> getTopBalances(int limit, int skip);
 
+    /**
+     * Get the amount of currency users.
+     * @return The amount of currency users.
+     */
     long currencyUserCount();
 
     /**
@@ -278,7 +285,7 @@ public interface Currency {
      * @param cacheUser The consumer to run with the currency user.
      */
     default void forCacheUser(UUID target, Consumer<CurrencyUser> cacheUser) {
-        Optional<CurrencyUser> localUser = CurrencyApi.getService().getLocalUser(target);
+        Optional<CurrencyUser> localUser = CurrencyApi.getService().getCachedUser(target);
         if (localUser.isPresent()) {
             cacheUser.accept(localUser.get());
             return;
@@ -300,7 +307,7 @@ public interface Currency {
             for (UUID userId : userIds) {
                 CurrencyUser user = CurrencyApi.getService().getUserFromDatabase(userId).join();
                 if (user != null) {
-                    CurrencyApi.getService().addLocalUser(user);
+                    CurrencyApi.getService().addCachedUser(user);
                 }
             }
             return true;

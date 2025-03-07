@@ -51,17 +51,17 @@ public class WWCurrencyService implements CurrencyService {
     }
 
     @Override
-    public Optional<CurrencyUser> getLocalUser(UUID uuid) {
+    public Optional<CurrencyUser> getCachedUser(UUID uuid) {
         return Optional.ofNullable(localUsersCache.get(uuid));
     }
 
     @Override
-    public void addLocalUser(CurrencyUser user) {
+    public void addCachedUser(CurrencyUser user) {
         localUsersCache.put(user.userId(), user);
     }
 
     @Override
-    public void removeLocalUser(UUID uuid) {
+    public void removeCachedUser(UUID uuid) {
         localUsersCache.remove(uuid);
     }
 

@@ -21,11 +21,11 @@ public interface CurrencyService {
 
     Map<UUID, CurrencyUser> localUsersCache();
 
-    Optional<CurrencyUser> getLocalUser(UUID uuid);
+    Optional<CurrencyUser> getCachedUser(UUID uuid);
 
-    void addLocalUser(CurrencyUser user);
+    void addCachedUser(CurrencyUser user);
 
-    void removeLocalUser(UUID uuid);
+    void removeCachedUser(UUID uuid);
 
     CompletableFuture<CurrencyUser> getUserFromDatabase(UUID uuid);
 }

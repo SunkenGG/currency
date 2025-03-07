@@ -31,7 +31,7 @@ public class EcoAdminRecountUserCommand extends CurrencyCommand {
             return;
         }
 
-        currency.transaction(() -> currency.recalculateBalance(offlinePlayer.getUniqueId(), currency)).thenAccept((result) -> {;
+        currency.transaction(() -> currency.recalculateBalance(offlinePlayer.getUniqueId())).thenAccept((result) -> {;
             if (!result) {
                 sendLang(commandSender, "transaction-failed", Placeholders.EMPTY);
             } else {
