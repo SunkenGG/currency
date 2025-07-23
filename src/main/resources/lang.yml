@@ -14,6 +14,11 @@ coin:
     message:
       - "<#FBE543><bold>COINS ADMIN HELP MENU"
       - "<white> ● /coins ecoadmin reload"
+      - "<white> ● /coins ecoadmin deletedhistory <player> [page]"
+      - "<white> ● /coins ecoadmin history <player> [page]"
+      - "<white> ● /coins ecoadmin undo <id>"
+      - "<white> ● /coins ecoadmin redo <id>"
+      - "<white> ● /coins ecoadmin recount <username>"
   invalid-args:
     message: "<#ff441e>⚠ Invalid arguments. Use <white>/coins help<#ff441e> for help"
   invalid-usage:
@@ -69,36 +74,44 @@ coin:
   transactionhistory-empty:
     message: "<#ff441e>⚠ No transactions found"
   transactionhistory-header:
-    message: "<#FBE543><bold>COINS TRANSACTION HISTORY PAGE <white>%page%<#FBE543> - <white>%total%<#FBE543> transactions"
+    message: "<white>┌─── <#FBE543><bold>COINS TRANSACTION HISTORY - <white>%total%<#FBE543> transactions"
   transactionhistory-line:
     message:
-      - "<white>#%id%"
-      - "<white>  ● <#FBE543>User: <white>%user%"
-      - "<white>  ● <#FBE543>Amount: <white>%amount%"
-      - "<white>  ● <#FBE543>Reason: <white>%reason%"
-      - "<white>  ● <#FBE543>Date: <white>%timestamp%"
-      - "<white>  ● <#FBE543>Type: <white>%type%"
-      - "<white>  ● <#FBE543>Linkage: <white>%linkerId%</white><dark_gray> (<gray>%linkerReason%<dark_gray>)"
-      - "<#ff000d>       <hover:show_text:Undo Payment><click:run_command:/coins ecoadmin undo %id%><#ff000d>[Undo]</click>"
+      - "<white>│ Transaction #%id%"
+      - "<white>│  ● <#FBE543>User: <white>%user%"
+      - "<white>│  ● <#FBE543>Amount: <white>%amount%"
+      - "<white>│  ● <#FBE543>Reason: <white>%reason%"
+      - "<white>│  ● <#FBE543>Date: <white>%timestamp%"
+      - "<white>│  ● <#FBE543>Type: <white>%type%"
+      - "<white>│  ● <#FBE543>Linker ID: <white>%linkerId%</white>"
+      - "<white>│  <#ff000d>     <hover:show_text:Undo Payment><click:run_command:/coins ecoadmin undo %id%><#ff000d>[Undo]</click>"
+  transactionhistory-line-splitter:
+    message: "<white>├─────────────────────────────"
   transactionhistory-footer:
-    message: "<#FBE543>Page <white>%page%<#FBE543> of <white>%total-pages%"
+    message: "<white>└─── <#FBE543>Page <white>%page%<#FBE543> of <white>%total-pages% ──────────────────"
   deletedtransactionhistory-header:
-    message: "<#FBE543><bold>COINS DELETED TRANSACTION HISTORY PAGE <white>%page%<#FBE543> - <white>%total%<#FBE543> transactions"
+    message: "<white>┌─── <#FBE543><bold>COINS DELETED TRANSACTION HISTORY - <white>%total%<#FBE543> transactions"
   deletedtransactionhistory-line:
     message:
-      - "<white>#%id%"
-      - "<white>  ● <#FBE543>User: <white>%user%"
-      - "<white>  ● <#FBE543>Amount: <white>%amount%"
-      - "<white>  ● <#FBE543>Reason: <white>%reason%"
-      - "<white>  ● <#FBE543>Date: <white>%timestamp%"
-      - "<white>  ● <#FBE543>Type: <white>%type%"
-      - "<white>  ● <#FBE543>Linkage: <white>%linkerId%</white><dark_gray> (<gray>%linkerReason%<dark_gray>)"
-      - "<#ff000d>       <hover:show_text:Redo Payment><click:run_command:/coins ecoadmin redo %id%><#72b043>[Redo]</click>"
+      - "<white>│ Transaction #%id%"
+      - "<white>│  ● <#FBE543>User: <white>%user%"
+      - "<white>│  ● <#FBE543>Amount: <white>%amount%"
+      - "<white>│  ● <#FBE543>Reason: <white>%reason%"
+      - "<white>│  ● <#FBE543>Date: <white>%timestamp%"
+      - "<white>│  ● <#FBE543>Type: <white>%type%"
+      - "<white>│  ● <#FBE543>Linker ID: <white>%linkerId%</white>"
+      - "<white>│  <#ff000d>     <hover:show_text:Redo Payment><click:run_command:/coins ecoadmin redo %id%><#72b043>[Redo]</click>"
+  deletedtransactionhistory-line-splitter:
+    message: "<white>├─────────────────────────────"
   deletedtransactionhistory-footer:
-    message: "<#FBE543>Page <white>%page%<#FBE543> of <white>%total-pages%"
+    message: "<white>└─── <#FBE543>Page <white>%page%<#FBE543> of <white>%total-pages% ──────────────────"
   undo-success:
     message: "<#a7ff27>Transaction <white>#%id%<#a7ff27> has been undone"
   redo-success:
     message: "<#a7ff27>Transaction <white>#%id%<#a7ff27> has been redone"
+  transaction-failed:
+    message: "<#ff441e>⚠ Transaction failed. Error: %error%"
+  recount-user:
+    message: "<#a7ff27>Recounting user <white>%player%<#a7ff27>'s balance"
   recountuser-success:
     message: "<#a7ff27>Recounted user <white>%player%<#a7ff27>'s balance"

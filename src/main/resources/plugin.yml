@@ -1,4 +1,4 @@
 name: Currency
 version: '${version}'
-main: com.wildwoodsmp.currency.bukkit.CurrencyPlugin
+main: gg.sunken.currency.bukkit.CurrencyPlugin
 api-version: '1.13'
