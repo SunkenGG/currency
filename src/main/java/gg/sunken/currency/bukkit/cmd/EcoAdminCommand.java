@@ -1,7 +1,6 @@
 package gg.sunken.currency.bukkit.cmd;
 
 import gg.sunken.currency.api.Currency;
-import com.wildwoodsmp.currency.bukkit.cmd.ecoadmin.*;
 import gg.sunken.currency.bukkit.cmd.ecoadmin.*;
 import gg.sunken.currency.util.Placeholders;
 import org.bukkit.command.CommandSender;

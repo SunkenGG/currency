@@ -6,7 +6,6 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.UpdateOptions;
-import com.wildwoodsmp.currency.api.*;
 import gg.sunken.currency.api.*;
 import gg.sunken.currency.api.Currency;
 import gg.sunken.currency.bukkit.CurrencyPlugin;

@@ -11,14 +11,20 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class CurrencyPlugin extends JavaPlugin {
 
+    public static final Map<UUID, UUID> TRANSACTION_LOCK = new ConcurrentHashMap<>();
     private File currenciesFile;
     @Getter private YamlConfiguration currenciesConfig;
 
     private File langFile;
     @Getter private YamlConfiguration langConfig;
+
 
     @Override
     public void onLoad() {
@@ -56,9 +62,10 @@ public final class CurrencyPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        CurrencyApi.getService().currencies().forEach((s, currency) -> {
-            Bukkit.getCommandMap().getKnownCommands().remove(currency.name());
-        });
+        CurrencyApi.get().currencies()
+                .forEach((s, currency) ->
+                        Bukkit.getCommandMap().getKnownCommands().remove(currency.name())
+                );
     }
 
     @Override

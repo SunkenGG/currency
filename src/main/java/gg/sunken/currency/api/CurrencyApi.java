@@ -4,6 +4,11 @@ import lombok.Getter;
 import lombok.Setter;
 
 
+
 public class CurrencyApi {
     @Getter @Setter private static CurrencyService service;
+
+    public static CurrencyService get() {
+        return service;
+    }
 }
