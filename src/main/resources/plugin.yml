@@ -2,3 +2,5 @@ name: Currency
 version: '${version}'
 main: gg.sunken.currency.bukkit.CurrencyPlugin
 api-version: '1.13'
+softdepend:
+  - Vault

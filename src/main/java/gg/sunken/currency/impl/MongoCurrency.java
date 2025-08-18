@@ -59,6 +59,7 @@ public class MongoCurrency implements Currency {
         this.transactionCollection.createIndex(new Document("currency", 1));
 
         this.deletedTransactionCollection = mongoDriver.getDeletedTransactionCollection();
+        this.deletedTransactionCollection.createIndex(new Document("user", 1));
     }
 
     @Override

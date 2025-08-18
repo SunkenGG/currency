@@ -3,11 +3,14 @@ package gg.sunken.currency.bukkit;
 import gg.sunken.currency.api.Currency;
 import gg.sunken.currency.api.CurrencyApi;
 import gg.sunken.currency.bukkit.cmd.BaseCommand;
+import gg.sunken.currency.bukkit.vault.VaultEconomy;
 import gg.sunken.currency.impl.MongoCurrency;
 import gg.sunken.currency.impl.MongoCurrencyService;
 import lombok.Getter;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -52,6 +55,21 @@ public final class CurrencyPlugin extends JavaPlugin {
 
             CurrencyApi.getService().addCurrency(currency);
             Bukkit.getCommandMap().register("currency", new BaseCommand(currency));
+
+            if (currency.name().equals("vault")) {
+                VaultEconomy vaultEconomy = new VaultEconomy(currency);
+                if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
+                    Bukkit.getServicesManager().register(
+                            Economy.class,
+                            vaultEconomy,
+                            this,
+                            ServicePriority.Normal
+                    );
+                } else {
+                    getLogger().warning("Vault is not installed, VaultEconomy will not be registered.");
+                }
+
+            }
         }
     }
 
