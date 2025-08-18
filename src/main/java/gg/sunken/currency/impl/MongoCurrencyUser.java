@@ -14,7 +14,7 @@ public class MongoCurrencyUser implements CurrencyUser {
 
     private final UUID playerId;
     private final String name;
-    private final Map<Currency, Double> balances;
+    private final Map<String, Double> balances;
 
     public MongoCurrencyUser(UUID playerId, String name) {
         this.playerId = playerId;
@@ -30,7 +30,7 @@ public class MongoCurrencyUser implements CurrencyUser {
             if (key.equals("_id")) continue;
             if (key.equals("name")) continue;
             Optional<Currency> currency = CurrencyApi.getService().getCurrency(key);
-            currency.ifPresent(value -> balances.put(value, document.getDouble(key)));
+            currency.ifPresent(value -> balances.put(value.name(), document.getDouble(key)));
         }
     }
 
@@ -38,9 +38,7 @@ public class MongoCurrencyUser implements CurrencyUser {
         Document document = new Document();
         document.put("_id", playerId.toString());
         document.put("name", name);
-        for (Map.Entry<Currency, Double> entry : balances.entrySet()) {
-            document.put(entry.getKey().name(), entry.getValue());
-        }
+        document.putAll(balances);
         return document;
     }
 
@@ -51,25 +49,25 @@ public class MongoCurrencyUser implements CurrencyUser {
 
     @Override
     public double balance(Currency currency) {
-        return balances.getOrDefault(currency, 0.0);
+        return balances.getOrDefault(currency.name(), 0.0);
     }
 
     @Override
     public void deposit(Currency currency, double amount, String reason, UUID linkerId, String linkerReason) {
-        this.balances.put(currency, this.balances.getOrDefault(currency, 0.0) + amount);
+        this.balances.put(currency.name(), this.balances.getOrDefault(currency.name(), 0.0) + amount);
     }
 
     @Override
     public void withdraw(Currency currency, double amount, String reason, UUID linkerId, String linkerReason) {
-        this.balances.put(currency, this.balances.getOrDefault(currency, 0.0) - amount);
+        this.balances.put(currency.name(), this.balances.getOrDefault(currency.name(), 0.0) - amount);
     }
 
     @Override
     public void set(Currency currency, double amount, String reason, UUID linkerId, String linkerReason) {
-        this.balances.put(currency, amount);
+        this.balances.put(currency.name(), amount);
     }
 
-    public Map<Currency, Double> getBalanceMap() {
+    public Map<String, Double> getBalanceMap() {
         return balances;
     }
 }
