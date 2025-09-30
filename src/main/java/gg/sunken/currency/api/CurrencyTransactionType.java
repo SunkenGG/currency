@@ -13,5 +13,6 @@ public enum CurrencyTransactionType {
     /**
      * The transaction is force override.
      */
-    OVERRIDE
+    OVERRIDE,
+    FAILED
 }

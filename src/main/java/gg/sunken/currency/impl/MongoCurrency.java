@@ -9,6 +9,9 @@ import com.mongodb.client.model.UpdateOptions;
 import gg.sunken.currency.api.*;
 import gg.sunken.currency.api.Currency;
 import gg.sunken.currency.bukkit.CurrencyPlugin;
+import gg.sunken.currency.bukkit.events.CurrencyGiveEvent;
+import gg.sunken.currency.bukkit.events.CurrencySetEvent;
+import gg.sunken.currency.bukkit.events.CurrencyTakeEvent;
 import gg.sunken.currency.impl.mongo.MongoDriver;
 import gg.sunken.currency.util.SortedList;
 import lombok.extern.java.Log;
@@ -129,10 +132,17 @@ public class MongoCurrency implements Currency {
         if (amount <= 0) throw new IllegalArgumentException("Amount must be greater than 0");
         if (reason == null) throw new IllegalArgumentException("Reason cannot be null");
 
+        CurrencyGiveEvent event = new CurrencyGiveEvent(user, this, amount);
+        boolean isCancelled = event.callEvent();
+        if (isCancelled) {
+            return new MongoCurrencyTransaction(this, null, 0, CurrencyTransactionType.FAILED, user, reason,
+                    Instant.now(), Optional.ofNullable(linkerId), Optional.ofNullable(linkerReason));
+        }
+
         MongoCurrencyTransaction transaction = new MongoCurrencyTransaction(
                 this,
                 UUID.randomUUID(),
-                amount,
+                event.getAmount(),
                 CurrencyTransactionType.PAYMENT,
                 user,
                 reason,
@@ -152,8 +162,16 @@ public class MongoCurrency implements Currency {
         if (amount < 0) throw new IllegalArgumentException("Amount must be greater than or equal to 0");
         if (reason == null) throw new IllegalArgumentException("Reason cannot be null");
 
+        CurrencySetEvent event = new CurrencySetEvent(user, this, amount);
+        boolean isCancelled = event.callEvent();
+        if (isCancelled) {
+            return new MongoCurrencyTransaction(this, null, 0, CurrencyTransactionType.FAILED, user, reason,
+                    Instant.now(), Optional.ofNullable(linkerId), Optional.ofNullable(linkerReason));
+        }
+
         double balance = balance(user);
 
+        amount = event.getAmount();
         double delta = balance > amount ? -(balance - amount) : (amount - balance);
 
         if (delta == 0) {
@@ -176,10 +194,17 @@ public class MongoCurrency implements Currency {
             throw new IllegalArgumentException("Cannot withdraw more than the balance");
         }
 
+        CurrencyTakeEvent event = new CurrencyTakeEvent(user, this, amount);
+        boolean isCancelled = event.callEvent();
+        if (isCancelled) {
+            return new MongoCurrencyTransaction(this, null, 0, CurrencyTransactionType.FAILED, user, reason,
+                    Instant.now(), Optional.ofNullable(linkerId), Optional.ofNullable(linkerReason));
+        }
+
         MongoCurrencyTransaction transaction = new MongoCurrencyTransaction(
                 this,
                 UUID.randomUUID(),
-                amount,
+                event.getAmount(),
                 CurrencyTransactionType.WITHDRAWAL,
                 user,
                 reason,
